@@ -1,0 +1,27 @@
+name: 100% Free YT and FB Dual Live Stream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */5 * * *'
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install FFmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    - name: Start Dual Loop Stream (YT + FB)
+      run: |
+        timeout 19800s ffmpeg -re -stream_loop -1 -i video.mp4 \
+          -c:v libx264 -preset ultrafast -b:v 2000k -maxrate 2000k -bufsize 4000k -pix_fmt yuv420p -g 50 \
+          -c:a aac -b:a 128k -ar 44100 \
+          -f tee -map 0:v -map 0:a \
+          "[f=flv]rtmp://://youtube.com{{ secrets.YT_STREAM_KEY }}|[f=flv]rtmps://://facebook.com{{ secrets.FB_STREAM_KEY }}" || true
